@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Club Management - Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card fade-in">
+        <!-- Brand Header -->
+        <div class="auth-header">
+            <div class="auth-logo">🏛️</div>
+            <h2>Club Management</h2>
+            <p>Connect, participate, and lead campus clubs</p>
+        </div>
+
+        <!-- Mode Switcher Tabs -->
+        <div class="auth-tabs">
+            <button type="button" class="auth-tab-btn active" id="tabLogin" onclick="switchAuthMode('login')">Sign In</button>
+            <button type="button" class="auth-tab-btn" id="tabRegister" onclick="switchAuthMode('register')">Create Account</button>
+        </div>
+
+        <!-- Alert Notification Box -->
+        <div id="alertBox" class="alert">
+            <span id="alertIcon"></span>
+            <span id="alertText"></span>
+        </div>
+
+        <!-- Authentication Form -->
+        <form id="authForm" onsubmit="handleAuthSubmit(event)">
+            <!-- Name field (shown on register only) -->
+            <div class="form-group" id="nameGroup" style="display: none;">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" id="name" class="form-control" placeholder="e.g. John Doe">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">College Email</label>
+                <input type="email" id="email" class="form-control" placeholder="name@college.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+
+            <!-- Role field (shown on register only) -->
+            <div class="form-group" id="roleGroup" style="display: none;">
+                <label class="form-label" for="role">Register As</label>
+                <select id="role" class="form-control">
+                    <option value="student">Student</option>
+                    <option value="club_admin">Club Admin</option>
+                </select>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+                Sign In
+            </button>
+        </form>
+
+        <!-- Quick 1-Click Demo Logins -->
+        <div class="demo-logins">
+            <div class="demo-title">Quick Demo Logins</div>
+            <div class="demo-btn-group">
+                <button type="button" class="demo-chip" onclick="quickFill('alice@college.com', '123456')">
+                    🎓 Student (Alice)
+                </button>
+                <button type="button" class="demo-chip" onclick="quickFill('techadmin@college.com', '123456')">
+                    🛠 Club Admin
+                </button>
+                <button type="button" class="demo-chip" onclick="quickFill('super@college.com', '123456')">
+                    ⚡ Super Admin
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
