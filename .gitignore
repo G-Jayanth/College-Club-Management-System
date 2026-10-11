@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+club-backend/node_modules/
+
+# Environment and sensitive keys
+.env
+club-backend/.env
+token.txt
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
