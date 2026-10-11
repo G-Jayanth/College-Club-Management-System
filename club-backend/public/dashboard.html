@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - College Club Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <a href="dashboard.html" class="nav-brand">
+            <span class="brand-icon">🏛️</span>
+            <span>ClubPortal</span>
+        </a>
+        <div class="nav-user">
+            <div class="user-badge">
+                <span id="navUserName">Loading...</span>
+                <span id="navRoleTag" class="role-tag role-student">Student</span>
+            </div>
+            <a href="admin.html" id="adminPortalLink" class="btn btn-outline btn-sm" style="display: none;">
+                ⚙️ Admin Panel
+            </a>
+            <button class="btn btn-outline btn-sm" onclick="logout()">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        <!-- Header Banner -->
+        <div class="header-section fade-in">
+            <div class="header-title">
+                <h1 id="welcomeGreeting">Welcome back! 👋</h1>
+                <p>Discover clubs, follow announcements, and participate in campus activities.</p>
+            </div>
+        </div>
+
+        <!-- Metric Statistics Bar -->
+        <div class="stats-grid fade-in">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🏆</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statMyClubs">0</div>
+                    <div class="stat-label">Active Memberships</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pending Requests</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">🎯</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statEvents">0</div>
+                    <div class="stat-label">Upcoming Events</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">📢</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statAnnouncements">0</div>
+                    <div class="stat-label">Announcements</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-nav fade-in">
+            <button class="tab-btn active" onclick="switchDashboardTab('clubs')">
+                🎪 Explore Clubs
+            </button>
+            <button class="tab-btn" onclick="switchDashboardTab('memberships')">
+                📋 My Memberships
+            </button>
+            <button class="tab-btn" onclick="switchDashboardTab('announcements')">
+                📢 Announcements
+            </button>
+            <button class="tab-btn" onclick="switchDashboardTab('events')">
+                📅 Campus Events
+            </button>
+        </div>
+
+        <!-- TAB 1: CLUBS -->
+        <section id="tabContentClubs" class="fade-in">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="font-size: 1.3rem; font-weight: 700;">Available Campus Clubs</h2>
+                <div style="display: flex; gap: 0.5rem;" id="categoryFilterContainer">
+                    <button class="btn btn-outline btn-sm active-filter" onclick="filterClubs('all', this)">All</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterClubs('Technology', this)">Technology</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterClubs('Cultural', this)">Cultural</button>
+                    <button class="btn btn-outline btn-sm" onclick="filterClubs('Sports', this)">Sports</button>
+                </div>
+            </div>
+            <div class="cards-grid" id="clubsGrid">
+                <div class="empty-state">Loading campus clubs...</div>
+            </div>
+        </section>
+
+        <!-- TAB 2: MY MEMBERSHIPS -->
+        <section id="tabContentMemberships" style="display: none;" class="fade-in">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem;">My Application Status</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Club Name</th>
+                            <th>Category</th>
+                            <th>Application Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membershipsTableBody">
+                        <tr><td colspan="4" class="empty-state">Loading your memberships...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 3: ANNOUNCEMENTS -->
+        <section id="tabContentAnnouncements" style="display: none;" class="fade-in">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem;">Club Notices & Announcements</h2>
+            <div class="cards-grid" id="announcementsGrid">
+                <div class="empty-state">Loading announcements...</div>
+            </div>
+        </section>
+
+        <!-- TAB 4: EVENTS -->
+        <section id="tabContentEvents" style="display: none;" class="fade-in">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem;">Upcoming Events & Hackathons</h2>
+            <div class="cards-grid" id="eventsGrid">
+                <div class="empty-state">Loading events...</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check session authentication
+        const session = requireAuth();
+        if (!session) {
+            // requireAuth will redirect
+        }
+
+        // Set user info in navbar
+        document.getElementById("navUserName").innerText = session.name;
+        document.getElementById("welcomeGreeting").innerText = `Welcome back, ${session.name.split(" ")[0]}! 👋`;
+        
+        const role = (session.role || "").toLowerCase();
+        if (role.includes("admin")) {
+            document.getElementById("navRoleTag").className = "role-tag role-admin";
+            document.getElementById("navRoleTag").innerText = role === "super_admin" ? "Super Admin" : "Club Admin";
+            document.getElementById("adminPortalLink").style.display = "inline-flex";
+        }
+
+        let allClubsData = [];
+        let activeCategoryFilter = "all";
+
+        // Tab Switcher
+        function switchDashboardTab(tabId) {
+            const tabs = ['clubs', 'memberships', 'announcements', 'events'];
+            const tabButtons = document.querySelectorAll('.tabs-nav .tab-btn');
+
+            tabs.forEach((t, index) => {
+                const contentEl = document.getElementById(`tabContent${capitalize(t)}`);
+                if (t === tabId) {
+                    contentEl.style.display = 'block';
+                    tabButtons[index].classList.add('active');
+                } else {
+                    contentEl.style.display = 'none';
+                    tabButtons[index].classList.remove('active');
+                }
+            });
+        }
+
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // Load Clubs
+        async function loadClubs() {
+            try {
+                const res = await fetch("/api/clubs", {
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    allClubsData = data.clubs;
+                    renderClubs();
+                }
+            } catch (err) {
+                console.error("Error loading clubs:", err);
+            }
+        }
+
+        function filterClubs(category, btnEl) {
+            activeCategoryFilter = category;
+            document.querySelectorAll("#categoryFilterContainer .btn").forEach(b => {
+                b.style.background = "transparent";
+                b.style.borderColor = "var(--border-color)";
+                b.style.color = "var(--text-secondary)";
+            });
+            btnEl.style.background = "rgba(99, 102, 241, 0.2)";
+            btnEl.style.borderColor = "var(--primary)";
+            btnEl.style.color = "#fff";
+            renderClubs();
+        }
+
+        function renderClubs() {
+            const container = document.getElementById("clubsGrid");
+            const filtered = activeCategoryFilter === "all" 
+                ? allClubsData 
+                : allClubsData.filter(c => (c.category || "").toLowerCase() === activeCategoryFilter.toLowerCase());
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon">🎪</div>
+                        <p>No clubs found in this category.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(club => {
+                let actionButtonHtml = "";
+                if (club.my_status === "approved") {
+                    actionButtonHtml = `<span class="badge badge-success">✓ Member</span>`;
+                } else if (club.my_status === "pending") {
+                    actionButtonHtml = `<span class="badge badge-warning">⏳ Pending Approval</span>`;
+                } else {
+                    actionButtonHtml = `<button class="btn btn-primary btn-sm" onclick="joinClub(${club.id})">Join Club</button>`;
+                }
+
+                return `
+                    <div class="glass-card">
+                        <div class="card-top">
+                            <h3 class="card-title">${escapeHtml(club.name)}</h3>
+                            <span class="badge badge-primary">${escapeHtml(club.category || 'General')}</span>
+                        </div>
+                        <p class="card-desc">${escapeHtml(club.description || 'No description provided.')}</p>
+                        <div class="card-meta">
+                            <span>👥 ${club.member_count || 0} Members</span>
+                            <div>${actionButtonHtml}</div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        // Join Club Request
+        async function joinClub(clubId) {
+            try {
+                const res = await fetch(`/api/clubs/${clubId}/join`, {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    // Refresh data
+                    loadClubs();
+                    loadUserMemberships();
+                } else {
+                    alert(data.message || "Failed to submit request");
+                }
+            } catch (err) {
+                console.error("Join Club Error:", err);
+                alert("Network error while trying to join club.");
+            }
+        }
+
+        // Load User Memberships
+        async function loadUserMemberships() {
+            try {
+                const res = await fetch("/api/user/memberships", {
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const memberships = data.memberships;
+                    const tbody = document.getElementById("membershipsTableBody");
+
+                    // Update stats
+                    const approvedCount = memberships.filter(m => m.status === "approved").length;
+                    const pendingCount = memberships.filter(m => m.status === "pending").length;
+                    document.getElementById("statMyClubs").innerText = approvedCount;
+                    document.getElementById("statPending").innerText = pendingCount;
+
+                    if (memberships.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">You haven't requested to join any clubs yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = memberships.map(m => {
+                        let statusBadge = "";
+                        if (m.status === "approved") {
+                            statusBadge = `<span class="badge badge-success">Approved</span>`;
+                        } else if (m.status === "pending") {
+                            statusBadge = `<span class="badge badge-warning">Pending Approval</span>`;
+                        } else {
+                            statusBadge = `<span class="badge badge-danger">Rejected</span>`;
+                        }
+
+                        const dateFormatted = new Date(m.joined_at).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(m.club_name)}</strong></td>
+                                <td><span class="badge badge-primary">${escapeHtml(m.club_category || 'General')}</span></td>
+                                <td>${dateFormatted}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading memberships:", err);
+            }
+        }
+
+        // Load Announcements
+        async function loadAnnouncements() {
+            try {
+                const res = await fetch("/api/announcements");
+                const data = await res.json();
+
+                if (data.success) {
+                    const announcements = data.announcements;
+                    document.getElementById("statAnnouncements").innerText = announcements.length;
+                    const container = document.getElementById("announcementsGrid");
+
+                    if (announcements.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <div class="empty-icon">📢</div>
+                                <p>No announcements posted yet.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = announcements.map(a => {
+                        const dateFormatted = new Date(a.created_at).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+
+                        return `
+                            <div class="glass-card">
+                                <div class="card-top">
+                                    <h3 class="card-title">${escapeHtml(a.title)}</h3>
+                                    <span class="badge badge-primary">${escapeHtml(a.club_name)}</span>
+                                </div>
+                                <p class="card-desc">${escapeHtml(a.body)}</p>
+                                <div class="card-meta">
+                                    <span>👤 By ${escapeHtml(a.author_name || 'Club Admin')}</span>
+                                    <span>🗓️ ${dateFormatted}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading announcements:", err);
+            }
+        }
+
+        // Load Events
+        async function loadEvents() {
+            try {
+                const res = await fetch("/api/events");
+                const data = await res.json();
+
+                if (data.success) {
+                    const events = data.events;
+                    document.getElementById("statEvents").innerText = events.length;
+                    const container = document.getElementById("eventsGrid");
+
+                    if (events.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <div class="empty-icon">📅</div>
+                                <p>No events scheduled right now.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = events.map(e => {
+                        const eventDate = new Date(e.event_date);
+                        const dateStr = eventDate.toLocaleString(undefined, {
+                            weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+
+                        const regBadge = e.registration_open 
+                            ? `<span class="badge badge-success">Open for Registration</span>` 
+                            : `<span class="badge badge-warning">Registration Closed</span>`;
+
+                        return `
+                            <div class="glass-card">
+                                <div class="card-top">
+                                    <h3 class="card-title">${escapeHtml(e.title)}</h3>
+                                    <span class="badge badge-primary">${escapeHtml(e.club_name)}</span>
+                                </div>
+                                <div style="margin: 0.5rem 0 1rem 0; font-size: 0.9rem; color: var(--text-secondary);">
+                                    <p style="margin-bottom: 0.35rem;">📍 <strong>Venue:</strong> ${escapeHtml(e.venue || 'TBA')}</p>
+                                    <p>🗓️ <strong>Date & Time:</strong> ${dateStr}</p>
+                                </div>
+                                <div class="card-meta">
+                                    ${regBadge}
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading events:", err);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize Data
+        loadClubs();
+        loadUserMemberships();
+        loadAnnouncements();
+        loadEvents();
+    </script>
+</body>
+</html>

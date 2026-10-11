@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Center - College Club Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="admin.html" class="nav-brand">
+            <span class="brand-icon">⚙️</span>
+            <span>Admin Control Center</span>
+        </a>
+        <div class="nav-user">
+            <div class="user-badge">
+                <span id="navAdminName">Loading...</span>
+                <span id="navRoleBadge" class="role-tag role-admin">Club Admin</span>
+            </div>
+            <a href="dashboard.html" class="btn btn-outline btn-sm">
+                🎓 Student View
+            </a>
+            <button class="btn btn-outline btn-sm" onclick="logout()">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Top Club Selector & Header -->
+        <div class="header-section fade-in">
+            <div class="header-title">
+                <h1>Club Management Dashboard</h1>
+                <p>Manage membership approvals, broadcast announcements, and organize campus events.</p>
+            </div>
+            <div style="min-width: 260px;">
+                <label class="form-label" for="clubSelect">Active Managed Club:</label>
+                <select id="clubSelect" class="form-control" onchange="onClubChange()">
+                    <option value="">Loading clubs...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Metric Statistics Bar -->
+        <div class="stats-grid fade-in">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statPendingReqs">0</div>
+                    <div class="stat-label">Pending Requests</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">👥</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statClubMembers">0</div>
+                    <div class="stat-label">Active Members</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6;">📢</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statAnnounceCount">0</div>
+                    <div class="stat-label">Announcements</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">📅</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="statEventCount">0</div>
+                    <div class="stat-label">Scheduled Events</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav fade-in">
+            <button class="tab-btn active" onclick="switchAdminTab('requests')">
+                📥 Membership Requests
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('announce')">
+                📢 Broadcast Announcements
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('events')">
+                🎯 Schedule Events
+            </button>
+            <button class="tab-btn" onclick="switchAdminTab('roster')">
+                👥 Member Roster
+            </button>
+        </div>
+
+        <!-- Feedback Alert Banner -->
+        <div id="adminAlertBox" class="alert">
+            <span id="adminAlertIcon"></span>
+            <span id="adminAlertText"></span>
+        </div>
+
+        <!-- TAB 1: MEMBERSHIP REQUESTS -->
+        <section id="tabContentRequests" class="fade-in">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem;">Pending Member Applications</h2>
+            <div id="requestsListContainer" class="cards-grid">
+                <div class="empty-state">Loading membership requests...</div>
+            </div>
+        </section>
+
+        <!-- TAB 2: BROADCAST ANNOUNCEMENT -->
+        <section id="tabContentAnnounce" style="display: none;" class="fade-in">
+            <div class="glass-card" style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">Post New Announcement</h3>
+                <form id="announceForm" onsubmit="handlePostAnnouncement(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="announceTitle">Announcement Title</label>
+                        <input type="text" id="announceTitle" class="form-control" placeholder="e.g. Hackathon 2026 Orientation Meetup" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="announceBody">Message Details</label>
+                        <textarea id="announceBody" class="form-control" placeholder="Write announcement details here..." required></textarea>
+                    </div>
+                    <button type="submit" id="announceSubmitBtn" class="btn btn-primary">
+                        📢 Broadcast to Club Members
+                    </button>
+                </form>
+            </div>
+
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Club Announcement History</h3>
+            <div class="cards-grid" id="adminAnnounceHistory">
+                <div class="empty-state">Loading announcements...</div>
+            </div>
+        </section>
+
+        <!-- TAB 3: SCHEDULE EVENT -->
+        <section id="tabContentEvents" style="display: none;" class="fade-in">
+            <div class="glass-card" style="margin-bottom: 2rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">Create New Club Event</h3>
+                <form id="eventForm" onsubmit="handleCreateEvent(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="eventTitle">Event Title</label>
+                        <input type="text" id="eventTitle" class="form-control" placeholder="e.g. AI & Web3 Bootcamp" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="eventVenue">Venue / Location</label>
+                            <input type="text" id="eventVenue" class="form-control" placeholder="e.g. Seminar Hall 2 or Online" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="eventDateTime">Date & Time</label>
+                            <input type="datetime-local" id="eventDateTime" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem;">
+                        <input type="checkbox" id="eventRegOpen" checked style="width: auto; cursor: pointer;">
+                        <label for="eventRegOpen" style="cursor: pointer; font-size: 0.9rem; font-weight: 500;">
+                            Open registration for campus students immediately
+                        </label>
+                    </div>
+                    <button type="submit" id="eventSubmitBtn" class="btn btn-primary" style="margin-top: 0.5rem;">
+                        🎯 Schedule Event
+                    </button>
+                </form>
+            </div>
+
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Scheduled Events</h3>
+            <div class="cards-grid" id="adminEventsHistory">
+                <div class="empty-state">Loading events...</div>
+            </div>
+        </section>
+
+        <!-- TAB 4: MEMBER ROSTER -->
+        <section id="tabContentRoster" style="display: none;" class="fade-in">
+            <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1.25rem;">Club Member Roster</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Member Since</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rosterTableBody">
+                        <tr><td colspan="4" class="empty-state">Loading roster...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Check session and ensure admin role
+        const session = requireAuth(["club_admin", "super_admin"]);
+        if (!session) {
+            // requireAuth will redirect
+        }
+
+        // Set admin details
+        document.getElementById("navAdminName").innerText = session.name;
+        const role = (session.role || "").toLowerCase();
+        if (role === "super_admin") {
+            document.getElementById("navRoleBadge").className = "role-tag role-super";
+            document.getElementById("navRoleBadge").innerText = "Super Admin";
+        }
+
+        let adminClubs = [];
+        let selectedClubId = null;
+
+        function showAdminAlert(message, type = "success") {
+            const box = document.getElementById("adminAlertBox");
+            const text = document.getElementById("adminAlertText");
+            const icon = document.getElementById("adminAlertIcon");
+            box.className = `alert alert-${type} fade-in`;
+            box.style.display = "flex";
+            text.innerText = message;
+            icon.innerText = type === "success" ? "✅" : "⚠️";
+
+            setTimeout(() => {
+                box.style.display = "none";
+            }, 4000);
+        }
+
+        // Tab Switcher
+        function switchAdminTab(tabId) {
+            const tabs = ['requests', 'announce', 'events', 'roster'];
+            const buttons = document.querySelectorAll('.tabs-nav .tab-btn');
+
+            tabs.forEach((t, i) => {
+                const content = document.getElementById(`tabContent${capitalize(t)}`);
+                if (t === tabId) {
+                    content.style.display = 'block';
+                    buttons[i].classList.add('active');
+                } else {
+                    content.style.display = 'none';
+                    buttons[i].classList.remove('active');
+                }
+            });
+        }
+
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // Load Clubs for dropdown
+        async function loadAdminClubs() {
+            try {
+                const res = await fetch("/api/admin/clubs", {
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success && data.clubs.length > 0) {
+                    adminClubs = data.clubs;
+                    const select = document.getElementById("clubSelect");
+                    select.innerHTML = adminClubs.map(c => 
+                        `<option value="${c.id}">${escapeHtml(c.name)} (${c.category || 'General'})</option>`
+                    ).join("");
+
+                    selectedClubId = adminClubs[0].id;
+                    refreshClubData();
+                } else {
+                    document.getElementById("clubSelect").innerHTML = `<option value="">No clubs found</option>`;
+                }
+            } catch (err) {
+                console.error("Error loading admin clubs:", err);
+            }
+        }
+
+        function onClubChange() {
+            selectedClubId = document.getElementById("clubSelect").value;
+            refreshClubData();
+        }
+
+        function refreshClubData() {
+            if (!selectedClubId) return;
+            loadRequests();
+            loadClubAnnouncements();
+            loadClubEvents();
+            loadMemberRoster();
+        }
+
+        // 1. Load Requests
+        async function loadRequests() {
+            const container = document.getElementById("requestsListContainer");
+            try {
+                const res = await fetch(`/api/clubs/${selectedClubId}/requests?status=pending`, {
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const requests = data.requests;
+                    document.getElementById("statPendingReqs").innerText = requests.length;
+
+                    if (requests.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <div class="empty-icon">🎉</div>
+                                <p>No pending membership requests for this club.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = requests.map(req => {
+                        const dateFormatted = new Date(req.joined_at).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+
+                        return `
+                            <div class="glass-card">
+                                <div class="card-top">
+                                    <h3 class="card-title">${escapeHtml(req.name)}</h3>
+                                    <span class="badge badge-warning">Pending Approval</span>
+                                </div>
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    ✉️ <strong>Email:</strong> ${escapeHtml(req.email)}
+                                </p>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+                                    Applied on ${dateFormatted}
+                                </p>
+                                <div style="display: flex; gap: 0.75rem; margin-top: auto;">
+                                    <button class="btn btn-success btn-sm" style="flex: 1;" onclick="approveRequest(${req.id})">
+                                        ✓ Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" style="flex: 1;" onclick="rejectRequest(${req.id})">
+                                        ✕ Reject
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading requests:", err);
+            }
+        }
+
+        // Approve Request
+        async function approveRequest(membershipId) {
+            try {
+                const res = await fetch(`/api/memberships/${membershipId}/approve`, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAdminAlert("Membership request approved! ✅");
+                    loadRequests();
+                    loadMemberRoster();
+                } else {
+                    showAdminAlert(data.message || "Failed to approve", "danger");
+                }
+            } catch (err) {
+                console.error("Approve error:", err);
+            }
+        }
+
+        // Reject Request
+        async function rejectRequest(membershipId) {
+            try {
+                const res = await fetch(`/api/memberships/${membershipId}/reject`, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAdminAlert("Membership request rejected.", "warning");
+                    loadRequests();
+                } else {
+                    showAdminAlert(data.message || "Failed to reject", "danger");
+                }
+            } catch (err) {
+                console.error("Reject error:", err);
+            }
+        }
+
+        // 2. Post Announcement
+        async function handlePostAnnouncement(event) {
+            event.preventDefault();
+            const title = document.getElementById("announceTitle").value.trim();
+            const body = document.getElementById("announceBody").value.trim();
+            const btn = document.getElementById("announceSubmitBtn");
+
+            btn.disabled = true;
+            btn.innerText = "Broadcasting...";
+
+            try {
+                const res = await fetch("/api/announcements", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${session.token}`
+                    },
+                    body: JSON.stringify({
+                        club_id: selectedClubId,
+                        title,
+                        body
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAdminAlert("Announcement posted successfully! 📢");
+                    document.getElementById("announceForm").reset();
+                    loadClubAnnouncements();
+                } else {
+                    showAdminAlert(data.message || "Failed to post announcement", "danger");
+                }
+            } catch (err) {
+                console.error("Post announcement error:", err);
+                showAdminAlert("Network error", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "📢 Broadcast to Club Members";
+            }
+        }
+
+        async function loadClubAnnouncements() {
+            try {
+                const res = await fetch(`/api/announcements?club_id=${selectedClubId}`);
+                const data = await res.json();
+                if (data.success) {
+                    const announcements = data.announcements;
+                    document.getElementById("statAnnounceCount").innerText = announcements.length;
+                    const container = document.getElementById("adminAnnounceHistory");
+
+                    if (announcements.length === 0) {
+                        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><p>No announcements posted for this club yet.</p></div>`;
+                        return;
+                    }
+
+                    container.innerHTML = announcements.map(a => {
+                        const dateFormatted = new Date(a.created_at).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+
+                        return `
+                            <div class="glass-card">
+                                <div class="card-top">
+                                    <h4 class="card-title">${escapeHtml(a.title)}</h4>
+                                    <span class="badge badge-primary">Published</span>
+                                </div>
+                                <p class="card-desc">${escapeHtml(a.body)}</p>
+                                <div class="card-meta">
+                                    <span>🗓️ ${dateFormatted}</span>
+                                    <span>👤 By ${escapeHtml(a.author_name || 'Admin')}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading club announcements:", err);
+            }
+        }
+
+        // 3. Schedule Event
+        async function handleCreateEvent(event) {
+            event.preventDefault();
+            const title = document.getElementById("eventTitle").value.trim();
+            const venue = document.getElementById("eventVenue").value.trim();
+            const event_date = document.getElementById("eventDateTime").value;
+            const registration_open = document.getElementById("eventRegOpen").checked;
+            const btn = document.getElementById("eventSubmitBtn");
+
+            btn.disabled = true;
+            btn.innerText = "Scheduling...";
+
+            try {
+                const res = await fetch("/api/events", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${session.token}`
+                    },
+                    body: JSON.stringify({
+                        club_id: selectedClubId,
+                        title,
+                        venue,
+                        event_date,
+                        registration_open
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showAdminAlert("Event scheduled successfully! 🎯");
+                    document.getElementById("eventForm").reset();
+                    loadClubEvents();
+                } else {
+                    showAdminAlert(data.message || "Failed to schedule event", "danger");
+                }
+            } catch (err) {
+                console.error("Create event error:", err);
+                showAdminAlert("Network error", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🎯 Schedule Event";
+            }
+        }
+
+        async function loadClubEvents() {
+            try {
+                const res = await fetch(`/api/events?club_id=${selectedClubId}`);
+                const data = await res.json();
+                if (data.success) {
+                    const events = data.events;
+                    document.getElementById("statEventCount").innerText = events.length;
+                    const container = document.getElementById("adminEventsHistory");
+
+                    if (events.length === 0) {
+                        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><p>No events scheduled for this club yet.</p></div>`;
+                        return;
+                    }
+
+                    container.innerHTML = events.map(e => {
+                        const dateFormatted = new Date(e.event_date).toLocaleString(undefined, {
+                            weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+
+                        return `
+                            <div class="glass-card">
+                                <div class="card-top">
+                                    <h4 class="card-title">${escapeHtml(e.title)}</h4>
+                                    <span class="badge ${e.registration_open ? 'badge-success' : 'badge-warning'}">
+                                        ${e.registration_open ? 'Open' : 'Closed'}
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    <p>📍 <strong>Venue:</strong> ${escapeHtml(e.venue || 'TBA')}</p>
+                                    <p>🗓️ <strong>Date:</strong> ${dateFormatted}</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading club events:", err);
+            }
+        }
+
+        // 4. Load Member Roster
+        async function loadMemberRoster() {
+            try {
+                const res = await fetch(`/api/clubs/${selectedClubId}/requests?status=approved`, {
+                    headers: { "Authorization": `Bearer ${session.token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const members = data.requests;
+                    document.getElementById("statClubMembers").innerText = members.length;
+                    const tbody = document.getElementById("rosterTableBody");
+
+                    if (members.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No approved members in this club yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = members.map(m => {
+                        const dateFormatted = new Date(m.joined_at).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+
+                        return `
+                            <tr>
+                                <td><strong>${escapeHtml(m.name)}</strong></td>
+                                <td>${escapeHtml(m.email)}</td>
+                                <td><span class="badge badge-success">Approved Member</span></td>
+                                <td>${dateFormatted}</td>
+                            </tr>
+                        `;
+                    }).join("");
+                }
+            } catch (err) {
+                console.error("Error loading member roster:", err);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initial Load
+        loadAdminClubs();
+    </script>
+</body>
+</html>
